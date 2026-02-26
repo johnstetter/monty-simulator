@@ -1,0 +1,474 @@
+/**
+ * Responsive styles for Monty Hall Simulator
+ * Mobile-first approach with tablet and desktop breakpoints
+ */
+
+/* Base styles are mobile-first, defined in main.css */
+
+/* Small mobile devices (landscape phones) */
+@media (max-width: 480px) {
+  /* Reduce spacing on very small screens */
+  .main-content {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .header {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  /* Smaller title on mobile */
+  .title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .subtitle {
+    font-size: var(--font-size-base);
+  }
+
+  /* Doors container adjustments */
+  .doors-container {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-md);
+    min-height: auto;
+  }
+
+  /* Smaller doors for mobile */
+  .door {
+    width: 140px;
+    height: 220px;
+  }
+
+  .door-number {
+    width: 30px;
+    height: 30px;
+    font-size: var(--font-size-base);
+  }
+
+  .door-icon {
+    font-size: 2.5rem;
+  }
+
+  /* Stacked choice buttons */
+  .choice-buttons {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+  }
+
+  .choice-button {
+    min-width: 250px;
+    max-width: 100%;
+    font-size: var(--font-size-base);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  /* Smaller modal on mobile */
+  .modal-content {
+    width: 95%;
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+  }
+
+  /* Single column stats grid */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  /* Smaller explanation padding */
+  .explanation-content {
+    padding: var(--spacing-md);
+  }
+
+  .game-status {
+    padding: var(--spacing-md);
+  }
+
+  /* Reduce font sizes */
+  .game-phase {
+    font-size: var(--font-size-xl);
+  }
+
+  .game-instructions {
+    font-size: var(--font-size-base);
+  }
+
+  .stats-section {
+    padding: var(--spacing-lg);
+  }
+
+  /* Keyboard help adjustments */
+  .keyboard-help {
+    font-size: var(--font-size-xs);
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* Mobile devices (portrait phones) */
+@media (max-width: 600px) {
+  /* Doors arranged vertically for better touch targets */
+  .doors-container {
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: center;
+  }
+
+  /* Better touch targets */
+  .door {
+    width: 160px;
+    height: 240px;
+    /* Ensure minimum 44px touch target per WCAG */
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Better button spacing for touch */
+  .choice-buttons {
+    gap: var(--spacing-lg);
+  }
+
+  .choice-button {
+    min-height: 44px;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .reset-button {
+    min-height: 44px;
+    padding: var(--spacing-md) var(--spacing-xl);
+  }
+
+  /* Full width error messages */
+  .temp-message {
+    right: var(--spacing-sm);
+    left: var(--spacing-sm);
+    transform: translateX(0);
+  }
+
+  .temp-message.visible {
+    transform: translateX(0);
+  }
+
+  /* Better modal sizing */
+  .modal-content {
+    max-height: 90vh;
+  }
+
+  /* Footer text wrapping */
+  .footer p {
+    line-height: 1.6;
+  }
+}
+
+/* Tablets (portrait) */
+@media (min-width: 601px) and (max-width: 768px) {
+  /* Two-column doors on larger mobile/small tablet */
+  .doors-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-lg);
+  }
+
+  /* One door on top, two on bottom, or adjust as needed */
+  .door:first-child {
+    flex: 1 0 100%;
+    align-self: center;
+  }
+
+  .door {
+    width: 160px;
+    height: 250px;
+  }
+
+  /* Two-column stats grid */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Choice buttons side by side */
+  .choice-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .choice-button {
+    flex: 0 1 calc(50% - var(--spacing-sm));
+    min-width: 200px;
+  }
+}
+
+/* Tablets (landscape) and small desktops */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Three doors in a row */
+  .doors-container {
+    flex-direction: row;
+    gap: var(--spacing-lg);
+  }
+
+  .door {
+    width: 170px;
+    height: 260px;
+  }
+
+  /* Two or three column stats depending on space */
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  /* Side by side choice buttons */
+  .choice-buttons {
+    flex-direction: row;
+    gap: var(--spacing-xl);
+  }
+
+  .choice-button {
+    min-width: 180px;
+  }
+}
+
+/* Large tablets and desktop */
+@media (min-width: 1025px) {
+  /* Optimal desktop layout */
+  .doors-container {
+    gap: var(--spacing-2xl);
+  }
+
+  .door {
+    width: 180px;
+    height: 280px;
+  }
+
+  /* Four column stats grid for desktop */
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 1000px;
+  }
+
+  /* Enhanced hover effects on desktop */
+  .door:hover {
+    transform: translateY(-12px) rotateX(8deg);
+  }
+
+  .choice-button:hover {
+    transform: translateY(-5px);
+  }
+
+  .reset-button:hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* Large desktop screens */
+@media (min-width: 1200px) {
+  /* Even more generous spacing */
+  .doors-container {
+    gap: var(--spacing-3xl);
+    margin: var(--spacing-3xl) 0;
+  }
+
+  .main-content {
+    padding: var(--spacing-3xl) var(--container-padding);
+  }
+
+  /* Larger doors on big screens */
+  .door {
+    width: 200px;
+    height: 300px;
+  }
+
+  .door-icon {
+    font-size: 5rem;
+  }
+
+  /* More dramatic hover effects */
+  .door:hover {
+    transform: translateY(-15px) rotateX(10deg);
+  }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1600px) {
+  /* Prevent content from becoming too wide */
+  .main-content {
+    max-width: 1400px;
+  }
+
+  .doors-container {
+    max-width: 800px;
+    margin: var(--spacing-3xl) auto;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* Reduce vertical spacing in landscape */
+  .header {
+    padding: var(--spacing-md) var(--container-padding);
+  }
+
+  .main-content {
+    padding: var(--spacing-lg) var(--container-padding);
+  }
+
+  .doors-container {
+    margin: var(--spacing-lg) 0;
+    min-height: auto;
+  }
+
+  .door {
+    height: 200px;
+  }
+
+  .game-status {
+    padding: var(--spacing-md);
+  }
+
+  .stats-section {
+    padding: var(--spacing-lg);
+  }
+
+  /* Horizontal layout for choice buttons in landscape */
+  .choice-buttons {
+    flex-direction: row;
+    gap: var(--spacing-md);
+  }
+
+  .choice-button {
+    min-width: 150px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+  }
+}
+
+/* High DPI/Retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Enhance text rendering on high DPI screens */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Sharper shadows on high DPI */
+  .door {
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .door:hover {
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Touch-specific adjustments */
+@media (pointer: coarse) {
+  /* Larger touch targets */
+  .door {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .choice-button,
+  .reset-button {
+    min-height: 44px;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  /* Remove hover effects on touch devices */
+  .door:hover {
+    transform: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .choice-button:hover,
+  .reset-button:hover {
+    transform: none;
+  }
+
+  /* Add active/pressed states for touch feedback */
+  .door:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease-out;
+  }
+
+  .choice-button:active,
+  .reset-button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease-out;
+  }
+}
+
+/* Print styles */
+@media print {
+  /* Hide interactive elements */
+  .choice-buttons,
+  .controls,
+  .keyboard-help,
+  .modal,
+  .temp-message,
+  .error-message {
+    display: none !important;
+  }
+
+  /* Simplify colors for print */
+  .door {
+    background: #f0f0f0 !important;
+    border: 2px solid #333 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .door.selected {
+    background: #d0d0d0 !important;
+  }
+
+  .door.revealed {
+    background: #e0e0e0 !important;
+    opacity: 1 !important;
+  }
+
+  .door.winner {
+    background: #f5f5f5 !important;
+  }
+
+  /* Ensure text is readable */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .stats-section {
+    border: 1px solid #ccc;
+    break-inside: avoid;
+  }
+
+  /* Add page break before stats */
+  .stats-section {
+    page-break-before: always;
+  }
+}
+
+/* Accessibility enhancements */
+@media (prefers-contrast: high) {
+  /* High contrast mode adjustments already in doors.css */
+
+  /* Additional high contrast for other elements */
+  .choice-button {
+    border-width: 3px;
+  }
+
+  .reset-button {
+    border: 3px solid currentColor;
+  }
+
+  .stat-card {
+    border-width: 2px;
+    border-color: currentColor;
+  }
+}

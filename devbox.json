@@ -1,0 +1,25 @@
+{
+  "packages": [
+    "nodejs@18",
+    "python3@3.11"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo 'Monty Hall Simulator Development Environment'",
+      "echo 'Available commands:'",
+      "echo '  devbox run server  - Start local development server'",
+      "echo '  devbox run test    - Run simple tests'",
+      "echo '  python3 -m http.server 8080 - Alternative simple server'"
+    ]
+  },
+  "scripts": {
+    "server": [
+      "echo 'Starting development server at http://localhost:8080'",
+      "python3 -m http.server 8080"
+    ],
+    "test": [
+      "echo 'Running basic validation...'",
+      "node src/js/game.js"
+    ]
+  }
+}

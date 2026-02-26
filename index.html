@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive Monty Hall problem simulator - Learn probability through hands-on experience">
+    <meta name="keywords" content="Monty Hall, probability, statistics, education, simulation">
+    <meta name="author" content="Interactive Learning Tools">
+
+    <!-- Open Graph tags for social sharing -->
+    <meta property="og:title" content="Monty Hall Simulator">
+    <meta property="og:description" content="Experience the famous Monty Hall probability puzzle interactively">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+
+    <!-- Twitter Card tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Monty Hall Simulator">
+    <meta name="twitter:description" content="Interactive probability learning with the classic Monty Hall problem">
+
+    <title>Monty Hall Simulator - Interactive Probability Learning</title>
+
+    <!-- Preload critical CSS -->
+    <link rel="preload" href="src/css/main.css" as="style">
+    <link rel="preload" href="src/css/doors.css" as="style">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="src/css/main.css">
+    <link rel="stylesheet" href="src/css/doors.css">
+    <link rel="stylesheet" href="src/css/responsive.css">
+
+    <!-- Favicon (using emoji for simplicity) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+</head>
+
+<body>
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Header -->
+    <header class="header">
+        <h1 class="title">🚗 Monty Hall Simulator</h1>
+        <p class="subtitle">Experience the famous probability puzzle interactively</p>
+    </header>
+
+    <!-- Main content -->
+    <main id="main-content" class="main-content">
+
+        <!-- Problem Explanation (Collapsible) -->
+        <section class="explanation-section">
+            <details class="explanation-details">
+                <summary class="explanation-summary">
+                    <span>📚 What is the Monty Hall Problem?</span>
+                    <span class="expand-icon" aria-hidden="true">▼</span>
+                </summary>
+                <div class="explanation-content" id="explanation">
+                    <p>
+                        The Monty Hall problem is a famous probability puzzle based on a game show scenario:
+                    </p>
+                    <ol>
+                        <li>You're shown <strong>three doors</strong> - behind one is a car (prize), behind the other two are goats</li>
+                        <li>You <strong>pick a door</strong>, but it remains closed</li>
+                        <li>The host, who knows what's behind each door, <strong>opens one of the remaining doors</strong> to reveal a goat</li>
+                        <li>You're then offered a choice: <strong>stay with your original pick</strong> or <strong>switch to the other unopened door</strong></li>
+                    </ol>
+                    <p>
+                        <strong>The question:</strong> Should you stay or switch?
+                        Most people think it doesn't matter (50/50 chance), but mathematics shows that
+                        <em>switching gives you a 66.7% chance of winning</em> versus 33.3% for staying!
+                    </p>
+                    <p>
+                        <strong>Why?</strong> When you first pick, you have a 1/3 chance of being right.
+                        The remaining doors have a 2/3 chance combined. When the host eliminates one losing door,
+                        that entire 2/3 probability transfers to the remaining door.
+                    </p>
+                </div>
+            </details>
+        </section>
+
+        <!-- Game Area -->
+        <section class="game-section">
+            <!-- Game Status -->
+            <div class="game-status">
+                <h2 id="game-phase" class="game-phase">Choose a Door</h2>
+                <p id="game-instructions" class="game-instructions">
+                    Pick one of the three doors. One hides a car, two hide goats.
+                </p>
+            </div>
+
+            <!-- Three Doors -->
+            <div class="doors-container" role="group" aria-label="Three doors to choose from">
+                <button
+                    class="door"
+                    id="door-0"
+                    aria-label="Door 1 - Click to select"
+                    tabindex="0"
+                >
+                    <div class="door-number">1</div>
+                </button>
+                <button
+                    class="door"
+                    id="door-1"
+                    aria-label="Door 2 - Click to select"
+                    tabindex="0"
+                >
+                    <div class="door-number">2</div>
+                </button>
+                <button
+                    class="door"
+                    id="door-2"
+                    aria-label="Door 3 - Click to select"
+                    tabindex="0"
+                >
+                    <div class="door-number">3</div>
+                </button>
+            </div>
+
+            <!-- Choice Buttons (Stay or Switch) -->
+            <div class="choice-buttons" id="choice-buttons" style="display: none;">
+                <button id="stay-button" class="choice-button stay-button">
+                    Stay with Door 1
+                </button>
+                <button id="switch-button" class="choice-button switch-button">
+                    Switch to Door 2
+                </button>
+            </div>
+
+            <!-- Reset Button -->
+            <div class="controls">
+                <button id="reset-button" class="reset-button">
+                    🔄 New Game
+                </button>
+            </div>
+
+            <!-- Keyboard Shortcuts Help -->
+            <div class="keyboard-help">
+                <small>
+                    <strong>Keyboard:</strong>
+                    1-3 to select doors • S to stay • W to switch • R to reset
+                </small>
+            </div>
+        </section>
+
+        <!-- Statistics Panel -->
+        <section class="stats-section">
+            <h2 class="stats-title">📊 Your Statistics</h2>
+
+            <div class="stats-grid">
+                <!-- Total Games -->
+                <div class="stat-card total-games-card">
+                    <div class="stat-label">Total Games</div>
+                    <div class="stat-value" id="total-games">0</div>
+                </div>
+
+                <!-- Stay Strategy Stats -->
+                <div class="stat-card strategy-card" id="stay-stats">
+                    <div class="strategy-name">Stay Strategy</div>
+                    <div class="strategy-details">
+                        <span class="win-rate">0.0%</span>
+                        <span class="games-played">0/0 wins</span>
+                    </div>
+                </div>
+
+                <!-- Switch Strategy Stats -->
+                <div class="stat-card strategy-card" id="switch-stats">
+                    <div class="strategy-name">Switch Strategy</div>
+                    <div class="strategy-details">
+                        <span class="win-rate">0.0%</span>
+                        <span class="games-played">0/0 wins</span>
+                    </div>
+                </div>
+
+                <!-- Comparison -->
+                <div class="stat-card comparison-card">
+                    <div class="stat-label">Comparison</div>
+                    <div id="comparison" class="comparison-result">
+                        Play some games to see statistics!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Panel (for reset functionality) -->
+            <div id="stats-panel" class="stats-panel-hidden"></div>
+        </section>
+
+        <!-- Educational Hints -->
+        <section class="hints-section">
+            <div id="hints-panel" class="hints-panel" style="display: none;">
+                <!-- Hints will be populated by JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="result-title">
+        <div class="modal-content result-modal-content">
+            <div id="result-message" class="result-message">
+                <!-- Result content populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>
+            Learn more about probability and statistics •
+            <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem" target="_blank" rel="noopener">
+                Monty Hall Problem on Wikipedia
+            </a>
+        </p>
+        <p class="credits">
+            Built with vanilla JavaScript • No frameworks, no tracking, just learning
+        </p>
+    </footer>
+
+    <!-- Load JavaScript modules -->
+    <script type="module" src="src/js/main.js"></script>
+
+    <!-- Fallback for older browsers -->
+    <script nomodule>
+        document.body.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: system-ui; text-align: center; padding: 20px;">
+                <div style="background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px;">
+                    <h1 style="color: #d32f2f; margin-bottom: 20px;">Browser Not Supported</h1>
+                    <p style="margin-bottom: 20px;">
+                        This simulator requires a modern browser that supports ES6 modules.
+                        Please update your browser or try with Chrome, Firefox, Safari, or Edge.
+                    </p>
+                </div>
+            </div>
+        `;
+    </script>
+
+    <!-- Progressive Web App manifest (optional) -->
+    <link rel="manifest" href="data:application/json,{
+        &quot;name&quot;: &quot;Monty Hall Simulator&quot;,
+        &quot;short_name&quot;: &quot;Monty Hall&quot;,
+        &quot;description&quot;: &quot;Interactive probability learning&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#ffffff&quot;,
+        &quot;theme_color&quot;: &quot;#1976d2&quot;
+    }">
+</body>
+</html>
