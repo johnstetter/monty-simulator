@@ -6,6 +6,9 @@
 import { MontyHallGame } from './game.js';
 import { GameStats } from './stats.js';
 import { MontyHallUI } from './ui.js';
+import { BatchSimulator } from './simulator.js';
+import { StatisticalAnalyzer } from './statistics.js';
+import { SimulationCharts } from './charts.js';
 
 /**
  * Main Application Class
@@ -15,6 +18,9 @@ class MontyHallApp {
     this.game = null;
     this.stats = null;
     this.ui = null;
+    this.batchSimulator = null;
+    this.statisticalAnalyzer = null;
+    this.simulationCharts = null;
     this.initialized = false;
   }
 
@@ -26,12 +32,15 @@ class MontyHallApp {
       // Initialize core components
       this.game = new MontyHallGame();
       this.stats = new GameStats();
+      this.batchSimulator = new BatchSimulator();
+      this.statisticalAnalyzer = new StatisticalAnalyzer();
+      this.simulationCharts = new SimulationCharts();
 
       // Wait for DOM to be ready
       await this.waitForDOM();
 
       // Initialize UI (this will handle all DOM interactions)
-      this.ui = new MontyHallUI(this.game, this.stats);
+      this.ui = new MontyHallUI(this.game, this.stats, this.batchSimulator, this.statisticalAnalyzer, this.simulationCharts);
 
       // Set up global error handling
       this.setupErrorHandling();

@@ -27,6 +27,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="src/css/main.css">
     <link rel="stylesheet" href="src/css/doors.css">
+    <link rel="stylesheet" href="src/css/simulation.css">
     <link rel="stylesheet" href="src/css/responsive.css">
 
     <!-- Favicon (using emoji for simplicity) -->
@@ -140,6 +141,180 @@
                 </small>
             </div>
         </section>
+
+        <!-- Batch Simulation Panel -->
+        <section class="simulation-panel">
+            <!-- Header -->
+            <div class="simulation-header">
+                <h2 class="simulation-title">
+                    🧮 Batch Simulation
+                </h2>
+                <div class="simulation-status" id="simulation-status">Ready</div>
+            </div>
+
+            <!-- Controls -->
+            <div class="simulation-controls">
+                <div class="controls-grid">
+                    <!-- Game Count -->
+                    <div class="control-group">
+                        <label class="control-label" for="game-count-input">Number of Games</label>
+                        <div class="game-count-selector">
+                            <input
+                                type="number"
+                                id="game-count-input"
+                                class="control-input game-count-input"
+                                min="10"
+                                max="100000"
+                                value="1000"
+                                aria-describedby="game-count-help"
+                            >
+                            <div class="game-count-presets">
+                                <button class="preset-button" data-count="100">100</button>
+                                <button class="preset-button active" data-count="1000">1K</button>
+                                <button class="preset-button" data-count="10000">10K</button>
+                                <button class="preset-button" data-count="50000">50K</button>
+                            </div>
+                            <small id="game-count-help" class="control-help">
+                                More games = more accurate results
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Strategy Selection -->
+                    <div class="control-group">
+                        <span class="control-label">Strategies to Test</span>
+                        <div class="strategy-selector">
+                            <div class="strategy-option selected" data-strategy="stay">
+                                <div class="strategy-checkbox checked"></div>
+                                <div>
+                                    <div class="strategy-label">Stay Strategy</div>
+                                    <div class="strategy-description">Keep original choice</div>
+                                </div>
+                            </div>
+                            <div class="strategy-option selected" data-strategy="switch">
+                                <div class="strategy-checkbox checked"></div>
+                                <div>
+                                    <div class="strategy-label">Switch Strategy</div>
+                                    <div class="strategy-description">Change to other door</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Speed Control -->
+                    <div class="control-group">
+                        <span class="control-label">Simulation Speed</span>
+                        <div class="speed-control">
+                            <div class="speed-option" data-speed="slow">
+                                <span class="speed-name">Slow</span>
+                                <span class="speed-description">Watch progress</span>
+                            </div>
+                            <div class="speed-option" data-speed="normal">
+                                <span class="speed-name">Normal</span>
+                                <span class="speed-description">Balanced</span>
+                            </div>
+                            <div class="speed-option selected" data-speed="fast">
+                                <span class="speed-name">Fast</span>
+                                <span class="speed-description">Maximum speed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="simulation-actions">
+                    <button id="start-simulation" class="simulation-button start-button">
+                        ▶️ Start Simulation
+                    </button>
+                    <button id="stop-simulation" class="simulation-button stop-button" disabled>
+                        ⏹️ Stop
+                    </button>
+                    <button id="reset-simulation" class="simulation-button reset-button">
+                        🔄 Reset Results
+                    </button>
+                    <button id="export-results" class="simulation-button export-button" disabled>
+                        📊 Export Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="simulation-progress" id="simulation-progress">
+                <div class="progress-header">
+                    <div class="progress-title">Simulation Progress</div>
+                    <div class="progress-stats">
+                        <div class="progress-stat">
+                            <div class="stat-value" id="progress-completed">0</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="progress-stat">
+                            <div class="stat-value" id="progress-total">1000</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="progress-stat">
+                            <div class="stat-value" id="progress-rate">0</div>
+                            <div class="stat-label">Games/sec</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progress-text">Ready to start simulation</div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="simulation-results" id="simulation-results">
+                <div class="results-header">
+                    <h3 class="results-title">Simulation Results</h3>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="results-summary" id="results-summary">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section" id="charts-section">
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h4 class="chart-title">Win Rate Convergence</h4>
+                            <div id="convergence-chart" class="chart-svg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Educational Insights -->
+                <div class="insights-section" id="insights-section">
+                    <h4 class="insights-title">
+                        💡 Educational Insights
+                    </h4>
+                    <div id="insights-content">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Modal -->
+        <div class="export-modal" id="export-modal">
+            <div class="export-modal-content">
+                <div class="export-modal-header">
+                    <h3 class="export-modal-title">Export Simulation Data</h3>
+                    <button class="export-modal-close" id="export-modal-close">×</button>
+                </div>
+                <div class="export-options">
+                    <div class="export-option" data-format="json">
+                        <div class="export-option-title">JSON Format</div>
+                        <div class="export-option-description">Complete data with statistics</div>
+                    </div>
+                    <div class="export-option" data-format="csv">
+                        <div class="export-option-title">CSV Format</div>
+                        <div class="export-option-description">Game-by-game results</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Statistics Panel -->
         <section class="stats-section">

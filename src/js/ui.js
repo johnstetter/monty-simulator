@@ -4,11 +4,16 @@
  */
 
 export class MontyHallUI {
-  constructor(game, stats) {
+  constructor(game, stats, batchSimulator, statisticalAnalyzer, simulationCharts) {
     this.game = game;
     this.stats = stats;
+    this.batchSimulator = batchSimulator;
+    this.statisticalAnalyzer = statisticalAnalyzer;
+    this.simulationCharts = simulationCharts;
     this.elements = {};
     this.isAnimating = false;
+    this.isSimulating = false;
+    this.currentSimulationResults = null;
 
     this.init();
   }
@@ -56,7 +61,32 @@ export class MontyHallUI {
       // Modal/overlay elements
       resultModal: document.getElementById('result-modal'),
       resultMessage: document.getElementById('result-message'),
-      resultDetails: document.getElementById('result-details')
+      resultDetails: document.getElementById('result-details'),
+
+      // Batch simulation elements
+      simulationStatus: document.getElementById('simulation-status'),
+      gameCountInput: document.getElementById('game-count-input'),
+      presetButtons: document.querySelectorAll('.preset-button'),
+      strategyOptions: document.querySelectorAll('.strategy-option'),
+      speedOptions: document.querySelectorAll('.speed-option'),
+      startSimulationBtn: document.getElementById('start-simulation'),
+      stopSimulationBtn: document.getElementById('stop-simulation'),
+      resetSimulationBtn: document.getElementById('reset-simulation'),
+      exportResultsBtn: document.getElementById('export-results'),
+      simulationProgress: document.getElementById('simulation-progress'),
+      progressCompleted: document.getElementById('progress-completed'),
+      progressTotal: document.getElementById('progress-total'),
+      progressRate: document.getElementById('progress-rate'),
+      progressBar: document.getElementById('progress-bar'),
+      progressText: document.getElementById('progress-text'),
+      simulationResults: document.getElementById('simulation-results'),
+      resultsSummary: document.getElementById('results-summary'),
+      chartsSection: document.getElementById('charts-section'),
+      convergenceChart: document.getElementById('convergence-chart'),
+      insightsContent: document.getElementById('insights-content'),
+      exportModal: document.getElementById('export-modal'),
+      exportModalClose: document.getElementById('export-modal-close'),
+      exportOptions: document.querySelectorAll('.export-option')
     };
   }
 
@@ -127,6 +157,9 @@ export class MontyHallUI {
     this.elements.statsPanel?.addEventListener('mouseup', () => {
       clearTimeout(resetTimeout);
     });
+
+    // Batch simulation events
+    this.bindSimulationEvents();
   }
 
   /**
@@ -557,5 +590,394 @@ export class MontyHallUI {
    */
   wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Bind batch simulation event listeners
+   */
+  bindSimulationEvents() {
+    // Preset buttons for game count
+    this.elements.presetButtons?.forEach(button => {
+      button.addEventListener('click', () => {
+        const count = parseInt(button.dataset.count);
+        if (this.elements.gameCountInput) {
+          this.elements.gameCountInput.value = count;
+        }
+
+        // Update active state
+        this.elements.presetButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+
+    // Strategy option toggles
+    this.elements.strategyOptions?.forEach(option => {
+      option.addEventListener('click', () => {
+        option.classList.toggle('selected');
+        const checkbox = option.querySelector('.strategy-checkbox');
+        if (checkbox) {
+          checkbox.classList.toggle('checked');
+        }
+      });
+    });
+
+    // Speed option selection
+    this.elements.speedOptions?.forEach(option => {
+      option.addEventListener('click', () => {
+        this.elements.speedOptions.forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+      });
+    });
+
+    // Simulation control buttons
+    this.elements.startSimulationBtn?.addEventListener('click', () => this.startBatchSimulation());
+    this.elements.stopSimulationBtn?.addEventListener('click', () => this.stopBatchSimulation());
+    this.elements.resetSimulationBtn?.addEventListener('click', () => this.resetBatchSimulation());
+    this.elements.exportResultsBtn?.addEventListener('click', () => this.showExportModal());
+
+    // Export modal
+    this.elements.exportModalClose?.addEventListener('click', () => this.hideExportModal());
+    this.elements.exportOptions?.forEach(option => {
+      option.addEventListener('click', () => {
+        const format = option.dataset.format;
+        this.exportSimulationResults(format);
+      });
+    });
+  }
+
+  /**
+   * Start batch simulation
+   */
+  async startBatchSimulation() {
+    if (this.isSimulating) return;
+
+    // Get simulation parameters
+    const gameCount = parseInt(this.elements.gameCountInput?.value || '1000');
+    const selectedStrategies = Array.from(this.elements.strategyOptions || [])
+      .filter(option => option.classList.contains('selected'))
+      .map(option => option.dataset.strategy);
+    const speed = Array.from(this.elements.speedOptions || [])
+      .find(option => option.classList.contains('selected'))?.dataset.speed || 'fast';
+
+    if (selectedStrategies.length === 0) {
+      this.showMessage('Please select at least one strategy to test.', 'error');
+      return;
+    }
+
+    this.isSimulating = true;
+    this.updateSimulationStatus('running');
+    this.updateSimulationControls();
+    this.showProgressSection();
+
+    try {
+      const results = await this.batchSimulator.runSimulation({
+        totalGames: gameCount,
+        strategies: selectedStrategies,
+        speed: speed,
+        onProgress: (progress) => this.updateSimulationProgress(progress),
+        onComplete: (results) => this.handleSimulationComplete(results)
+      });
+
+      this.currentSimulationResults = results;
+
+    } catch (error) {
+      console.error('Simulation error:', error);
+      this.showMessage('Simulation failed: ' + error.message, 'error');
+    } finally {
+      this.isSimulating = false;
+      this.updateSimulationStatus('ready');
+      this.updateSimulationControls();
+    }
+  }
+
+  /**
+   * Stop batch simulation
+   */
+  stopBatchSimulation() {
+    if (!this.isSimulating) return;
+
+    this.batchSimulator.stopSimulation();
+    this.isSimulating = false;
+    this.updateSimulationStatus('stopped');
+    this.updateSimulationControls();
+    this.showMessage('Simulation stopped by user.', 'info');
+  }
+
+  /**
+   * Reset batch simulation
+   */
+  resetBatchSimulation() {
+    if (this.isSimulating) {
+      this.stopBatchSimulation();
+    }
+
+    this.currentSimulationResults = null;
+    this.hideProgressSection();
+    this.hideResultsSection();
+    this.updateSimulationStatus('ready');
+    this.updateSimulationControls();
+    this.showMessage('Simulation results cleared.', 'info');
+  }
+
+  /**
+   * Update simulation status display
+   */
+  updateSimulationStatus(status) {
+    const statusTexts = {
+      'ready': 'Ready',
+      'running': 'Running...',
+      'stopped': 'Stopped',
+      'completed': 'Completed'
+    };
+
+    if (this.elements.simulationStatus) {
+      this.elements.simulationStatus.textContent = statusTexts[status] || 'Ready';
+      this.elements.simulationStatus.className = `simulation-status ${status}`;
+    }
+  }
+
+  /**
+   * Update simulation control button states
+   */
+  updateSimulationControls() {
+    if (this.elements.startSimulationBtn) {
+      this.elements.startSimulationBtn.disabled = this.isSimulating;
+    }
+    if (this.elements.stopSimulationBtn) {
+      this.elements.stopSimulationBtn.disabled = !this.isSimulating;
+    }
+    if (this.elements.exportResultsBtn) {
+      this.elements.exportResultsBtn.disabled = !this.currentSimulationResults;
+    }
+  }
+
+  /**
+   * Update simulation progress
+   */
+  updateSimulationProgress(progress) {
+    if (this.elements.progressCompleted) {
+      this.elements.progressCompleted.textContent = progress.completed.toLocaleString();
+    }
+    if (this.elements.progressTotal) {
+      this.elements.progressTotal.textContent = progress.total.toLocaleString();
+    }
+    if (this.elements.progressBar) {
+      this.elements.progressBar.style.width = `${progress.percentage}%`;
+    }
+    if (this.elements.progressText) {
+      this.elements.progressText.textContent = `${progress.completed} of ${progress.total} games (${progress.percentage.toFixed(1)}%)`;
+    }
+
+    // Update games per second
+    const now = Date.now();
+    if (this.lastProgressUpdate) {
+      const deltaTime = now - this.lastProgressUpdate;
+      const deltaGames = progress.completed - (this.lastProgressCompleted || 0);
+      const gamesPerSecond = Math.round((deltaGames / deltaTime) * 1000);
+
+      if (this.elements.progressRate) {
+        this.elements.progressRate.textContent = gamesPerSecond.toLocaleString();
+      }
+    }
+
+    this.lastProgressUpdate = now;
+    this.lastProgressCompleted = progress.completed;
+  }
+
+  /**
+   * Handle simulation completion
+   */
+  handleSimulationComplete(results) {
+    this.currentSimulationResults = results;
+    this.updateSimulationStatus('completed');
+    this.showResultsSection();
+    this.displaySimulationResults(results);
+    this.showMessage('Simulation completed successfully!', 'success');
+  }
+
+  /**
+   * Display simulation results
+   */
+  displaySimulationResults(results) {
+    // Generate summary cards
+    this.displayResultsSummary(results);
+
+    // Generate charts
+    this.displayCharts(results);
+
+    // Generate educational insights
+    this.displayInsights(results);
+  }
+
+  /**
+   * Display results summary cards
+   */
+  displayResultsSummary(results) {
+    if (!this.elements.resultsSummary) return;
+
+    const summaryCards = [];
+
+    for (const strategy of results.strategies) {
+      const data = results.data[strategy];
+      const stats = results.statistics.summary[strategy];
+      const confidence = results.statistics.confidence[strategy];
+
+      summaryCards.push(`
+        <div class="summary-card">
+          <div class="summary-value">${(stats.winRate * 100).toFixed(1)}%</div>
+          <div class="summary-label">${strategy} Strategy</div>
+          <div class="summary-detail">
+            ${data.won.toLocaleString()} wins out of ${data.played.toLocaleString()} games
+          </div>
+          <div class="summary-detail">
+            95% confidence: ${(confidence.lower * 100).toFixed(1)}% - ${(confidence.upper * 100).toFixed(1)}%
+          </div>
+        </div>
+      `);
+    }
+
+    // Add convergence summary
+    const convergenceStats = this.statisticalAnalyzer.analyzeConvergence(results);
+    summaryCards.push(`
+      <div class="summary-card">
+        <div class="summary-value">${(results.duration / 1000).toFixed(1)}s</div>
+        <div class="summary-label">Simulation Time</div>
+        <div class="summary-detail">
+          ${results.totalGames.toLocaleString()} total games
+        </div>
+        <div class="summary-detail">
+          ${Math.round(results.totalGames / (results.duration / 1000))} games/sec
+        </div>
+      </div>
+    `);
+
+    this.elements.resultsSummary.innerHTML = summaryCards.join('');
+  }
+
+  /**
+   * Display simulation charts
+   */
+  displayCharts(results) {
+    if (!this.elements.convergenceChart) return;
+
+    // Generate convergence chart
+    const chartSvg = this.simulationCharts.createConvergenceChart(results);
+    this.elements.convergenceChart.innerHTML = chartSvg;
+  }
+
+  /**
+   * Display educational insights
+   */
+  displayInsights(results) {
+    if (!this.elements.insightsContent) return;
+
+    const insights = this.statisticalAnalyzer.generateInsights(results);
+
+    const insightsHtml = insights.map(insight => `
+      <div class="insight-item">
+        <div class="insight-title">${insight.title}</div>
+        <div class="insight-description">${insight.description}</div>
+      </div>
+    `).join('');
+
+    this.elements.insightsContent.innerHTML = insightsHtml;
+  }
+
+  /**
+   * Show progress section
+   */
+  showProgressSection() {
+    if (this.elements.simulationProgress) {
+      this.elements.simulationProgress.classList.add('visible');
+    }
+  }
+
+  /**
+   * Hide progress section
+   */
+  hideProgressSection() {
+    if (this.elements.simulationProgress) {
+      this.elements.simulationProgress.classList.remove('visible');
+    }
+  }
+
+  /**
+   * Show results section
+   */
+  showResultsSection() {
+    if (this.elements.simulationResults) {
+      this.elements.simulationResults.classList.add('visible');
+    }
+  }
+
+  /**
+   * Hide results section
+   */
+  hideResultsSection() {
+    if (this.elements.simulationResults) {
+      this.elements.simulationResults.classList.remove('visible');
+    }
+  }
+
+  /**
+   * Show export modal
+   */
+  showExportModal() {
+    if (!this.currentSimulationResults) {
+      this.showMessage('No simulation results to export.', 'error');
+      return;
+    }
+
+    if (this.elements.exportModal) {
+      this.elements.exportModal.classList.add('visible');
+    }
+  }
+
+  /**
+   * Hide export modal
+   */
+  hideExportModal() {
+    if (this.elements.exportModal) {
+      this.elements.exportModal.classList.remove('visible');
+    }
+  }
+
+  /**
+   * Export simulation results
+   */
+  exportSimulationResults(format) {
+    if (!this.currentSimulationResults) return;
+
+    try {
+      const data = this.batchSimulator.exportResults(this.currentSimulationResults, format);
+      const filename = `monty-hall-simulation-${Date.now()}.${format}`;
+
+      this.downloadFile(data, filename, format === 'json' ? 'application/json' : 'text/csv');
+      this.hideExportModal();
+      this.showMessage(`Results exported as ${filename}`, 'success');
+
+    } catch (error) {
+      console.error('Export error:', error);
+      this.showMessage('Export failed: ' + error.message, 'error');
+    }
+  }
+
+  /**
+   * Download file helper
+   */
+  downloadFile(data, filename, mimeType) {
+    const blob = new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
   }
 }
