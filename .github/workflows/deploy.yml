@@ -36,6 +36,15 @@ jobs:
 
       - name: 📦 Install build tools
         run: |
+          # Create minimal package.json for ES6 module support
+          cat > package.json << 'EOF'
+          {
+            "type": "module",
+            "name": "monty-hall-simulator-ci",
+            "private": true
+          }
+          EOF
+
           # Install global build tools for minification
           npm install -g html-minifier-terser csso-cli terser
 
@@ -51,51 +60,51 @@ jobs:
       - name: 🧪 Run integration tests
         run: |
           echo "🧪 Running game logic tests..."
-          node -e "
-          import('./src/js/game.js').then(({ MontyHallGame }) => {
-            console.log('Testing Monty Hall game logic...');
+          cat > test-integration.mjs << 'EOF'
+          import { MontyHallGame } from './src/js/game.js';
 
-            // Test basic game flow
-            const game = new MontyHallGame();
-            game.selectDoor(0);
-            if (game.hostRevealedDoor === null) throw new Error('Host did not reveal door');
-            if (game.hostRevealedDoor === game.carDoor) throw new Error('Host revealed car door');
+          console.log('Testing Monty Hall game logic...');
 
-            game.makeChoice('switch');
-            if (!game.isFinished()) throw new Error('Game not finished after choice');
+          // Test basic game flow
+          const game = new MontyHallGame();
+          game.selectDoor(0);
+          if (game.hostRevealedDoor === null) throw new Error('Host did not reveal door');
+          if (game.hostRevealedDoor === game.carDoor) throw new Error('Host revealed car door');
 
-            // Test probability distribution
-            let stayWins = 0, switchWins = 0;
-            for (let i = 0; i < 1000; i++) {
-              const stayGame = new MontyHallGame();
-              stayGame.selectDoor(0);
-              stayGame.makeChoice('stay');
-              if (stayGame.won) stayWins++;
+          game.makeChoice('switch');
+          if (!game.isFinished()) throw new Error('Game not finished after choice');
 
-              const switchGame = new MontyHallGame();
-              switchGame.selectDoor(0);
-              switchGame.makeChoice('switch');
-              if (switchGame.won) switchWins++;
-            }
+          // Test probability distribution
+          let stayWins = 0, switchWins = 0;
+          for (let i = 0; i < 1000; i++) {
+            const stayGame = new MontyHallGame();
+            stayGame.selectDoor(0);
+            stayGame.makeChoice('stay');
+            if (stayGame.won) stayWins++;
 
-            const stayRate = stayWins / 1000;
-            const switchRate = switchWins / 1000;
+            const switchGame = new MontyHallGame();
+            switchGame.selectDoor(0);
+            switchGame.makeChoice('switch');
+            if (switchGame.won) switchWins++;
+          }
 
-            if (Math.abs(stayRate - 0.333) > 0.1) {
-              throw new Error(\`Stay rate (\${stayRate.toFixed(3)}) too far from expected 0.333\`);
-            }
-            if (Math.abs(switchRate - 0.667) > 0.1) {
-              throw new Error(\`Switch rate (\${switchRate.toFixed(3)}) too far from expected 0.667\`);
-            }
+          const stayRate = stayWins / 1000;
+          const switchRate = switchWins / 1000;
 
-            console.log(\`✅ Stay rate: \${(stayRate*100).toFixed(1)}% (expected ~33.3%)\`);
-            console.log(\`✅ Switch rate: \${(switchRate*100).toFixed(1)}% (expected ~66.7%)\`);
-            console.log('🎉 All tests passed!');
-          }).catch(err => {
-            console.error('❌ Test failed:', err);
-            process.exit(1);
-          });
-          "
+          if (Math.abs(stayRate - 0.333) > 0.1) {
+            throw new Error(`Stay rate (${stayRate.toFixed(3)}) too far from expected 0.333`);
+          }
+          if (Math.abs(switchRate - 0.667) > 0.1) {
+            throw new Error(`Switch rate (${switchRate.toFixed(3)}) too far from expected 0.667`);
+          }
+
+          console.log(`✅ Stay rate: ${(stayRate*100).toFixed(1)}% (expected ~33.3%)`);
+          console.log(`✅ Switch rate: ${(switchRate*100).toFixed(1)}% (expected ~66.7%)`);
+          console.log('🎉 All tests passed!');
+          EOF
+
+          node test-integration.mjs
+          rm test-integration.mjs
 
       - name: 🔍 Validate HTML structure
         run: |
