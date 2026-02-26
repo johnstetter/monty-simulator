@@ -1,0 +1,320 @@
+name: Deploy Monty Hall Simulator to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Allow manual deployment from Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Test job - validates code quality and functionality
+  test:
+    runs-on: ubuntu-latest
+    name: 🧪 Test & Validate
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 Install build tools
+        run: |
+          # Create minimal package.json for ES6 module support
+          cat > package.json << 'EOF'
+          {
+            "type": "module",
+            "name": "monty-hall-simulator-ci",
+            "private": true
+          }
+          EOF
+
+          # Install global build tools for minification
+          npm install -g html-minifier-terser csso-cli terser
+
+      - name: ✅ Validate JavaScript syntax
+        run: |
+          echo "🔍 Checking JavaScript syntax..."
+          node --check src/js/game.js
+          node --check src/js/stats.js
+          node --check src/js/ui.js
+          node --check src/js/main.js
+          echo "✅ All JavaScript files have valid syntax"
+
+      - name: 🧪 Run integration tests
+        run: |
+          echo "🧪 Running game logic tests..."
+          cat > test-integration.mjs << 'EOF'
+          import { MontyHallGame } from './src/js/game.js';
+
+          console.log('Testing Monty Hall game logic...');
+
+          // Test basic game flow
+          const game = new MontyHallGame();
+          game.selectDoor(0);
+          if (game.hostRevealedDoor === null) throw new Error('Host did not reveal door');
+          if (game.hostRevealedDoor === game.carDoor) throw new Error('Host revealed car door');
+
+          game.makeChoice('switch');
+          if (!game.isFinished()) throw new Error('Game not finished after choice');
+
+          // Test probability distribution
+          let stayWins = 0, switchWins = 0;
+          for (let i = 0; i < 1000; i++) {
+            const stayGame = new MontyHallGame();
+            stayGame.selectDoor(0);
+            stayGame.makeChoice('stay');
+            if (stayGame.won) stayWins++;
+
+            const switchGame = new MontyHallGame();
+            switchGame.selectDoor(0);
+            switchGame.makeChoice('switch');
+            if (switchGame.won) switchWins++;
+          }
+
+          const stayRate = stayWins / 1000;
+          const switchRate = switchWins / 1000;
+
+          if (Math.abs(stayRate - 0.333) > 0.1) {
+            throw new Error(`Stay rate (${stayRate.toFixed(3)}) too far from expected 0.333`);
+          }
+          if (Math.abs(switchRate - 0.667) > 0.1) {
+            throw new Error(`Switch rate (${switchRate.toFixed(3)}) too far from expected 0.667`);
+          }
+
+          console.log(`✅ Stay rate: ${(stayRate*100).toFixed(1)}% (expected ~33.3%)`);
+          console.log(`✅ Switch rate: ${(switchRate*100).toFixed(1)}% (expected ~66.7%)`);
+          console.log('🎉 All tests passed!');
+          EOF
+
+          node test-integration.mjs
+          rm test-integration.mjs
+
+      - name: 🔍 Validate HTML structure
+        run: |
+          echo "🔍 Validating HTML structure..."
+          # Check for required elements
+          if ! grep -q 'id="door-0"' index.html; then
+            echo "❌ Missing door-0 element"
+            exit 1
+          fi
+          if ! grep -q 'id="door-1"' index.html; then
+            echo "❌ Missing door-1 element"
+            exit 1
+          fi
+          if ! grep -q 'id="door-2"' index.html; then
+            echo "❌ Missing door-2 element"
+            exit 1
+          fi
+          if ! grep -q 'type="module"' index.html; then
+            echo "❌ Missing ES6 module script tag"
+            exit 1
+          fi
+          echo "✅ HTML structure validation passed"
+
+      - name: 🎨 Validate CSS files
+        run: |
+          echo "🔍 Validating CSS files..."
+          # Check for required CSS files and key selectors
+          if [ ! -f "src/css/main.css" ]; then
+            echo "❌ Missing main.css"
+            exit 1
+          fi
+          if [ ! -f "src/css/doors.css" ]; then
+            echo "❌ Missing doors.css"
+            exit 1
+          fi
+          if [ ! -f "src/css/responsive.css" ]; then
+            echo "❌ Missing responsive.css"
+            exit 1
+          fi
+
+          # Check for key CSS classes
+          if ! grep -q ".door" src/css/doors.css; then
+            echo "❌ Missing .door class in doors.css"
+            exit 1
+          fi
+          echo "✅ CSS validation passed"
+
+  # Build job - optimizes assets for production
+  build:
+    runs-on: ubuntu-latest
+    name: 🏗️ Build & Optimize
+    needs: test
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 Install build tools
+        run: |
+          npm install -g html-minifier-terser csso-cli terser
+
+      - name: 🗂️ Create build directory
+        run: |
+          mkdir -p dist
+          cp -r src dist/
+          cp index.html dist/
+          cp README.md dist/
+          cp docs dist/ -r
+          cp .gitignore dist/ || true
+
+      - name: 🗜️ Minify HTML
+        run: |
+          html-minifier-terser \
+            --input-dir dist \
+            --output-dir dist \
+            --file-ext html \
+            --collapse-whitespace \
+            --remove-comments \
+            --remove-redundant-attributes \
+            --use-short-doctype \
+            --minify-css true \
+            --minify-js true
+
+      - name: 🎨 Minify CSS
+        run: |
+          find dist -name "*.css" -exec csso {} --output {} \;
+
+      - name: ⚡ Minify JavaScript
+        run: |
+          find dist -name "*.js" -exec terser {} --compress --mangle --output {} \;
+
+      - name: 📊 Generate build stats
+        run: |
+          echo "📊 Build Statistics:" > dist/build-stats.txt
+          echo "===================" >> dist/build-stats.txt
+          echo "Build Date: $(date)" >> dist/build-stats.txt
+          echo "Commit: $GITHUB_SHA" >> dist/build-stats.txt
+          echo "Branch: $GITHUB_REF_NAME" >> dist/build-stats.txt
+          echo "" >> dist/build-stats.txt
+          echo "File Sizes:" >> dist/build-stats.txt
+          find dist -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) -exec ls -lh {} \; | awk '{print $9 ": " $5}' >> dist/build-stats.txt
+
+          # Display stats
+          cat dist/build-stats.txt
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  # Deploy job - deploys to GitHub Pages (only on main branch)
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    name: 🚀 Deploy to GitHub Pages
+    needs: build
+    steps:
+      - name: 🌐 Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v4
+
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 📢 Deployment notification
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "🌐 Site URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "📊 You can view the live Monty Hall Simulator at the URL above"
+
+  # Lighthouse CI job - performance and accessibility testing
+  lighthouse:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    name: 🔍 Lighthouse CI
+    needs: deploy
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: 🔍 Run Lighthouse CI
+        run: |
+          # Wait for deployment to be ready
+          sleep 30
+
+          # Create Lighthouse config
+          cat > lighthouserc.json << 'EOF'
+          {
+            "ci": {
+              "collect": {
+                "url": ["https://${{ github.repository_owner }}.github.io/monty-simulator/"],
+                "numberOfRuns": 1
+              },
+              "assert": {
+                "assertions": {
+                  "categories:performance": ["error", {"minScore": 0.8}],
+                  "categories:accessibility": ["error", {"minScore": 0.9}],
+                  "categories:best-practices": ["error", {"minScore": 0.8}],
+                  "categories:seo": ["error", {"minScore": 0.8}]
+                }
+              }
+            }
+          }
+          EOF
+
+          # Run Lighthouse
+          lhci autorun || echo "⚠️ Lighthouse checks failed, but deployment succeeded"
+
+  # Notification job - reports deployment status
+  notify:
+    if: always()
+    runs-on: ubuntu-latest
+    name: 📢 Notify Status
+    needs: [test, build, deploy]
+    steps:
+      - name: 📊 Deployment Status
+        run: |
+          echo "📊 Deployment Summary"
+          echo "===================="
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+          echo ""
+          echo "Job Status:"
+          echo "- Test: ${{ needs.test.result }}"
+          echo "- Build: ${{ needs.build.result }}"
+          echo "- Deploy: ${{ needs.deploy.result }}"
+
+          if [[ "${{ needs.deploy.result }}" == "success" ]]; then
+            echo ""
+            echo "🎉 Deployment successful!"
+            echo "🌐 Live site: https://${{ github.repository_owner }}.github.io/monty-simulator/"
+            echo "📚 The Monty Hall Simulator is now live and ready for educational use!"
+          else
+            echo "❌ Deployment failed or skipped"
+          fi
