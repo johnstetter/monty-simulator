@@ -215,7 +215,7 @@ jobs:
           cat dist/build-stats.txt
 
       - name: 📤 Upload build artifacts
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
@@ -231,11 +231,11 @@ jobs:
     steps:
       - name: 🌐 Configure GitHub Pages
         id: pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v4
 
       - name: 🚀 Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
 
       - name: 📢 Deployment notification
         run: |
