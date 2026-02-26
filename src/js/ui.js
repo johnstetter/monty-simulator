@@ -861,7 +861,7 @@ export class MontyHallUI {
     if (!this.elements.convergenceChart) return;
 
     // Generate convergence chart
-    const chartSvg = this.simulationCharts.createConvergenceChart(results);
+    const chartSvg = this.simulationCharts.createConvergenceChart('convergence-chart', results);
     this.elements.convergenceChart.innerHTML = chartSvg;
   }
 
@@ -871,7 +871,7 @@ export class MontyHallUI {
   displayInsights(results) {
     if (!this.elements.insightsContent) return;
 
-    const insights = this.statisticalAnalyzer.generateInsights(results);
+    const insights = this.statisticalAnalyzer.generateEducationalInsights(results);
 
     const insightsHtml = insights.map(insight => `
       <div class="insight-item">
