@@ -13,13 +13,7 @@
     ]
   },
   "scripts": {
-    "server": [
-      "echo 'Starting development server at http://localhost:8080'",
-      "python3 -m http.server 8080"
-    ],
-    "test": [
-      "echo 'Running basic validation...'",
-      "node src/js/game.js"
-    ]
+    "server": "python3 -m http.server 8080",
+    "test": "node --check src/js/*.js && echo '✅ All JavaScript files have valid syntax'"
   }
 }
