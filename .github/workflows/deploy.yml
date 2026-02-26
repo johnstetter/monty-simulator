@@ -33,23 +33,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
-      - name: 📦 Install dependencies
+      - name: 📦 Install build tools
         run: |
-          # Create minimal package.json for tooling
-          cat > package.json << 'EOF'
-          {
-            "name": "monty-hall-simulator",
-            "version": "1.0.0",
-            "scripts": {
-              "test": "node --check src/js/*.js",
-              "lint:html": "echo 'HTML validation placeholder'",
-              "lint:css": "echo 'CSS validation placeholder'"
-            },
-            "devDependencies": {}
-          }
-          EOF
+          # Install global build tools for minification
+          npm install -g html-minifier-terser csso-cli terser
 
       - name: ✅ Validate JavaScript syntax
         run: |
